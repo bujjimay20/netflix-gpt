@@ -1,11 +1,21 @@
 import React from "react";
 import Header from "./Header";
-
+import useNowPlayingMovies from "../hooks/useNowPlayingMovies";
+import MainContainer from "./MainContainer";
+import SecondaryContainer from "./SecondaryContainer";
+// MainContainer
+//   - videoBackground
+//   - videoTitle
+// SecondaryContainer
+//   - MovieList * n
+//     - Cards * n
 const Browse = () => {
+  useNowPlayingMovies();
   return (
     <div>
       <Header />
-      Browse
+      <MainContainer />
+      <SecondaryContainer />
     </div>
   );
 };

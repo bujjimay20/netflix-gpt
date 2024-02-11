@@ -1,19 +1,36 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { onAuthStateChanged } from "firebase/auth";
 import { signOut } from "firebase/auth";
 import { auth } from "../utils/firebase";
-import { useDispatch } from "react-redux";
-import { removeUser } from "../utils/userSlice";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { addUser, removeUser } from "../utils/userSlice";
+import { LOGO, USER_AVATAR } from "../utils/constants";
 
 const Header = () => {
   const navigate = useNavigate();
+  const user = useSelector((state) => state.user);
+  const dispatch = useDispatch();
+  useEffect(() => {
+    const authUnsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, see docs for a list of available properties
+        // https://firebase.google.com/docs/reference/js/auth.user
+        const { uid, email, displayName } = user;
+        dispatch(addUser({ uid: uid, email: email, displayName: displayName }));
+        navigate("/browse");
+      } else {
+        // User is signed out
+        dispatch(removeUser());
+        navigate("/");
+      }
+    });
+    return () => authUnsubscribe();
+  }, []);
 
   const handleSignOut = () => {
     signOut(auth)
-      .then(() => {
-        // Sign-out successful.
-        navigate("/");
-      })
+      .then(() => {})
       .catch((error) => {
         // An error happened.
         navigate("/error");
@@ -21,22 +38,26 @@ const Header = () => {
   };
   return (
     <div className="absolute w-screen px-8 py-2 bg-gradient-to-b from-black z-10 flex justify-between">
-      <img
-        className="w-48"
-        src="https://cdn.cookielaw.org/logos/dd6b162f-1a32-456a-9cfe-897231c7763c/4345ea78-053c-46d2-b11e-09adaef973dc/Netflix_Logo_PMS.png"
-        alt="netflix-logo"
-      />
+      <img className="w-48" src={LOGO} alt="netflix-logo" />
       <div className="flex p-2">
         <img
           className="w-10 h-10 rounded-lg"
-          src="https://occ-0-90-92.1.nflxso.net/dnm/api/v6/vN7bi_My87NPKvsBoib006Llxzg/AAAABTZ2zlLdBVC05fsd2YQAR43J6vB1NAUBOOrxt7oaFATxMhtdzlNZ846H3D8TZzooe2-FT853YVYs8p001KVFYopWi4D4NXM.png?r=229"
+          src={USER_AVATAR}
           alt="usericon"
         />
-        <div>
-          <button className="font-bold text-white m-2 " onClick={handleSignOut}>
-            Sign Out
-          </button>
-        </div>
+        {user?.displayName && (
+          <span className="text-white mx-2 my-2">{user?.displayName}</span>
+        )}
+        {user && (
+          <div>
+            <button
+              className="font-bold text-white m-2 "
+              onClick={handleSignOut}
+            >
+              Sign Out
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

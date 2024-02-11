@@ -7,12 +7,14 @@ import {
 import Header from "./Header";
 import { checkValidData } from "../utils/validate";
 import { auth } from "../utils/firebase";
-import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { addUser } from "../utils/userSlice";
+import { MAIN_URL } from "../utils/constants";
 
 const Login = () => {
   const [isSignInForm, setIsSignInForm] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
-  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const email = useRef(null);
   const password = useRef(null);
   const fullName = useRef(null);
@@ -21,11 +23,7 @@ const Login = () => {
     e.preventDefault();
     console.log(email.current.value, password.current.value);
     //validate the form data
-    const message = checkValidData(
-      fullName?.current?.value,
-      email.current.value,
-      password.current.value
-    );
+    const message = checkValidData(email.current.value, password.current.value);
     setErrorMessage(message);
     if (message) return;
     //Sign in Sign Up logic
@@ -45,7 +43,10 @@ const Login = () => {
           })
             .then(() => {
               // Profile updated!
-              navigate("/browse");
+              const { uid, email, displayName } = auth.currentUser;
+              dispatch(
+                addUser({ uid: uid, email: email, displayName: displayName })
+              );
             })
             .catch((error) => {
               // An error occurred
@@ -69,7 +70,6 @@ const Login = () => {
           // Signed in
           const user = userCredential.user;
           console.log(user);
-          navigate("/browse");
         })
         .catch((error) => {
           const errorCode = error.code;
@@ -87,10 +87,7 @@ const Login = () => {
     <div>
       <Header />
       <div className="absolute">
-        <img
-          src="https://assets.nflxext.com/ffe/siteui/vlv3/5e16108c-fd30-46de-9bb8-0b4e1bbbc509/68483501-f27e-4794-a811-e86fa2e3a25f/US-en-20240205-popsignuptwoweeks-perspective_alpha_website_large.jpg"
-          alt="logo"
-        />
+        <img src={MAIN_URL} alt="logo" />
       </div>
       <form
         className=" w-3/12 absolute mt-36 right-0 
